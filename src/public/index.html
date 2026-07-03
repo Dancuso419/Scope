@@ -79,7 +79,7 @@
   .hero .sub b { background: var(--blue); color: var(--paper); padding: 0.03em 0.28em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 
   /* ── animated scan visual ────────────────────────── */
-  .scanviz { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1 / 1; margin-left: auto; border: var(--bd); box-shadow: var(--sh); background: var(--paper); }
+  .scanviz { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1 / 1; margin-left: auto; }
   .scanviz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .scanviz .sweep { position: absolute; inset: 8%; border-radius: 50%; background: conic-gradient(from 0deg, rgba(239,142,1,0.55) 0deg, rgba(239,142,1,0.14) 46deg, transparent 54deg); animation: scanspin 9s linear infinite; }
   @keyframes scanspin { to { transform: rotate(360deg); } }
@@ -217,13 +217,11 @@
   @media (max-width: 680px) { .cards { grid-template-columns: 1fr; } }
 
   /* ── ecosystem ───────────────────────────────────── */
-  .eco { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
-  .eco .netwrap { border: var(--bd); box-shadow: var(--sh); background: var(--paper); padding: 1rem; }
-  .eco .net { width: 100%; height: auto; display: block; }
-  .eco-stats { display: flex; gap: 2rem 3rem; flex-wrap: wrap; margin-top: 2rem; }
-  .eco-stats .s .n { font-size: clamp(2.2rem, 4vw, 3.2rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
-  .eco-stats .s .l { margin-top: 0.5rem; }
-  @media (max-width: 800px) { .eco { grid-template-columns: 1fr; } .eco .netwrap { order: 2; } }
+  .eco { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  .eco-stats { display: flex; flex-direction: column; gap: 1.4rem; }
+  .eco-stats .s .n { font-size: clamp(2.4rem, 4.5vw, 3.4rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+  .eco-stats .s .l { margin-top: 0.4rem; }
+  @media (max-width: 800px) { .eco { grid-template-columns: 1fr; } }
 
   /* ── manifesto ───────────────────────────────────── */
   .manifesto { border-top: var(--bd); border-bottom: var(--bd); }
@@ -366,30 +364,11 @@
         <div class="micro kicker">Coverage</div>
         <h2 class="title">Built for your whole on-chain footprint.</h2>
         <p class="lede" style="margin-top:1.1rem">Pick one chain or several. Scope scans them in parallel and merges everything into a single report — your true cross-chain concentration, holdings, and activity, each item tagged by its chain.</p>
-        <div class="eco-stats">
-          <div class="s"><div class="n">6</div><div class="l micro">chains</div></div>
-          <div class="s"><div class="n">4</div><div class="l micro">health checks</div></div>
-          <div class="s"><div class="n">100%</div><div class="l micro">deterministic</div></div>
-        </div>
       </div>
-      <div class="netwrap">
-        <svg class="net" viewBox="0 0 360 300" fill="none" aria-hidden="true">
-          <g stroke="#111111" stroke-width="1.5">
-            <line x1="180" y1="150" x2="70" y2="60"/><line x1="180" y1="150" x2="300" y2="60"/>
-            <line x1="180" y1="150" x2="40" y2="150"/><line x1="180" y1="150" x2="320" y2="150"/>
-            <line x1="180" y1="150" x2="70" y2="240"/><line x1="180" y1="150" x2="300" y2="240"/>
-          </g>
-          <g font-family="ui-monospace, monospace" font-size="10" font-weight="700" fill="#111111" text-anchor="middle">
-            <circle cx="70" cy="60" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="70" y="63">X LAYER</text>
-            <circle cx="300" cy="60" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="300" y="63">ETH</text>
-            <circle cx="40" cy="150" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="40" y="153">BASE</text>
-            <circle cx="320" cy="150" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="320" y="153">ARB</text>
-            <circle cx="70" cy="240" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="70" y="243">BSC</text>
-            <circle cx="300" cy="240" r="27" fill="#FFFFFF" stroke="#111" stroke-width="2.5"/><text x="300" y="243">POLY</text>
-          </g>
-          <circle cx="180" cy="150" r="42" fill="#EF8E01" stroke="#111" stroke-width="3"/>
-          <text x="180" y="156" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="700" fill="#111111" text-anchor="middle">SCOPE</text>
-        </svg>
+      <div class="eco-stats">
+        <div class="s"><div class="n">6</div><div class="l micro">chains · x layer, ethereum, base, arbitrum, bsc, polygon</div></div>
+        <div class="s"><div class="n">4</div><div class="l micro">health checks</div></div>
+        <div class="s"><div class="n">100%</div><div class="l micro">deterministic</div></div>
       </div>
     </div>
   </section>

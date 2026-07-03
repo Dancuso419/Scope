@@ -20,6 +20,9 @@ export interface WalletHealth {
   deadTokens: DeadToken[];
   dust: DustItem[];
   activity: ActivityTimeline;
+  // Credible tokens by USD value, descending — feeds the holdings chart. Spam is
+  // already gated out, so this is the real, liquid portfolio breakdown.
+  holdings: { symbol: string; usdValue: number }[];
   liquidity: {
     credibleTokens: number;
     totalTokens: number;
@@ -61,8 +64,14 @@ export function assembleHealth(input: AssembleInput, now = Date.now()): WalletHe
     (t) => t.type === '1' || t.type === '2' || isCredible(t.tokenContractAddress),
   );
 
+  const holdings = liquidBalances
+    .map((b) => ({ symbol: b.symbol, usdValue: (parseNum(b.balance) ?? 0) * (parseNum(b.tokenPrice) ?? 0) }))
+    .filter((h) => h.usdValue > 0)
+    .sort((a, b) => b.usdValue - a.usdValue);
+
   return {
     concentration: analyzeConcentration(liquidBalances),
+    holdings,
     // dust is value-only and UNGATED: dust sits at the bottom of the value
     // ranking where the market fan-out never reaches, and the mandatory
     // disclaimer already covers the spam/airdrop caveat. detectDust caps the list.

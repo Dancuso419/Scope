@@ -17,8 +17,9 @@ function health(overrides: Partial<WalletHealth> = {}): WalletHealth {
       { token: 'OMG', liquidityUsd: 4692, volume24hUsd: 49, reason: 'illiquid-and-inactive' },
     ],
     dust: [{ token: 'CRUMB', usd_value: 1.949867223502011, disclaimer: DUST_DISCLAIMER }],
-    activity: { hasActivity: true, eventCount: 3, firstAt: '2025-12-01T00:00:00.000Z', lastAt: '2025-12-31T00:00:00.000Z', notable: [] },
+    activity: { hasActivity: true, eventCount: 3, firstAt: '2025-12-01T00:00:00.000Z', lastAt: '2025-12-31T00:00:00.000Z', notable: [{ action: 'buy', token: 'CMD', valueUsd: 1029.7171407219093, at: '2025-12-15T00:00:00.000Z' }] },
     liquidity: { credibleTokens: 5, totalTokens: 100, insufficient: false },
+    holdings: [{ symbol: 'ETH', usdValue: 8000 }, { symbol: 'KNC', usdValue: 2000 }],
     ...overrides,
   };
 }
@@ -60,6 +61,19 @@ test('maps WalletHealth to the TRD §6 response shape', () => {
   assert.equal(r.health_summary, null);
   assert.equal(r.activity_story, null);
   assert.deepEqual(r.warnings, []);
+});
+
+test('response carries a holdings breakdown (share %) and structured activity for the charts', () => {
+  const r = buildResponse('0xW', 'ethereum', health(), now, []);
+  // holdings: top tokens by value, share = % of total
+  assert.equal(r.holdings[0].token, 'ETH');
+  assert.equal(r.holdings[0].share, 80); // 8000 / 10000
+  assert.equal(r.holdings[1].token, 'KNC');
+  assert.equal(r.holdings[1].share, 20);
+  // structured activity for the timeline infographic (rounded)
+  assert.equal(r.activity.event_count, 3);
+  assert.equal(r.activity.notable[0].token, 'CMD');
+  assert.equal(r.activity.notable[0].usd_value, 1029.72);
 });
 
 test('validation: missing wallet_address throws BadRequestError', async () => {

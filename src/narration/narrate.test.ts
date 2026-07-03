@@ -17,6 +17,7 @@ function health(overrides: Partial<WalletHealth> = {}): WalletHealth {
       notable: [{ action: 'buy', token: 'CMD', valueUsd: 1029.7171407219093, at: '2025-12-15T00:00:00.000Z' }],
     },
     liquidity: { credibleTokens: 12, totalTokens: 2783, insufficient: false },
+    holdings: [{ symbol: 'KNC', usdValue: 5000 }],
     ...overrides,
   };
 }

@@ -46,6 +46,18 @@ test('credibility floor: a thin-pool memecoin cannot back a huge valuation', () 
   assert.equal(h.liquidity.credibleTokens, 1);
 });
 
+test('holdings lists credible tokens by USD value, descending; spam excluded', () => {
+  const balances = [
+    bal('KNC', '0xk', '1000', '5'),      // $5k credible
+    bal('ETH', '', '10', '2000'),        // $20k native, credible
+    bal('SPAM', '0xs', '1000000', '9'),  // fake price, no credible market
+  ];
+  const markets = [mkt('KNC', '0xk', '50000')];
+  const h = assembleHealth({ balances, markets, approvals: [], dexHistory: [] }, now);
+  assert.deepEqual(h.holdings.map((x) => x.symbol), ['ETH', 'KNC']); // sorted desc, spam gone
+  assert.equal(h.holdings[0].usdValue, 20000);
+});
+
 test('native token (empty contract address) is inherently credible despite no market', () => {
   const balances = [bal('ETH', '', '2', '2000')]; // native, never in markets
   const h = assembleHealth({ balances, markets: [], approvals: [], dexHistory: [] }, now);

@@ -16,6 +16,16 @@ export interface ApiResponse {
     dead_tokens: { token: string; summary: string | null }[];
     dust: { token: string; usd_value: number; disclaimer: string }[];
   };
+  // Deterministic breakdowns for the dashboard charts (additive to the TRD §6
+  // contract). holdings = credible portfolio by share; activity = structured
+  // timeline behind the prose activity_story.
+  holdings: { token: string; usd_value: number; share: number }[];
+  activity: {
+    event_count: number;
+    first_at: string | null;
+    last_at: string | null;
+    notable: { action: string; token: string; usd_value: number; at: string }[];
+  };
   // Narration Layer outputs (two prose blocks, TRD §5). Null until Gemini fills
   // them; a narration failure leaves them null and adds a warning — the
   // deterministic facts above are the paid product and always return.
@@ -55,6 +65,20 @@ function validate(body: AnalyzeRequest): { address: string; chain: string } {
 }
 
 
+const HOLDINGS_TOP = 8; // chart the top N; roll the rest into one "Other" slice
+
+function holdingsBreakdown(holdings: WalletHealth['holdings']): ApiResponse['holdings'] {
+  const total = holdings.reduce((s, x) => s + x.usdValue, 0);
+  const share = (v: number) => (total > 0 ? round1((v / total) * 100) : 0);
+  const out = holdings.slice(0, HOLDINGS_TOP).map((x) => ({ token: x.symbol, usd_value: round2(x.usdValue), share: share(x.usdValue) }));
+  const rest = holdings.slice(HOLDINGS_TOP);
+  if (rest.length) {
+    const restVal = rest.reduce((s, x) => s + x.usdValue, 0);
+    out.push({ token: 'Other', usd_value: round2(restVal), share: share(restVal) });
+  }
+  return out;
+}
+
 export function buildResponse(address: string, chain: string, h: WalletHealth, now: number, warnings: string[]): ApiResponse {
   return {
     wallet_address: address,
@@ -74,6 +98,13 @@ export function buildResponse(address: string, chain: string, h: WalletHealth, n
       })),
       dead_tokens: h.deadTokens.map((d) => ({ token: d.token, summary: null })),
       dust: h.dust.map((d) => ({ token: d.token, usd_value: round2(d.usd_value), disclaimer: d.disclaimer })),
+    },
+    holdings: holdingsBreakdown(h.holdings),
+    activity: {
+      event_count: h.activity.eventCount,
+      first_at: h.activity.firstAt,
+      last_at: h.activity.lastAt,
+      notable: h.activity.notable.map((n) => ({ action: n.action, token: n.token, usd_value: round2(n.valueUsd), at: n.at })),
     },
     health_summary: null,
     activity_story: null,

@@ -294,9 +294,11 @@
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
   /* scroll reveals — IntersectionObserver-driven, works in every browser.
-     Default state is VISIBLE; JS opts elements in, so no-JS never ships blank. */
-  .rv.rv-prep { opacity: 0; transform: translateY(30px); }
-  .rv.rv-in { opacity: 1; transform: none; transition: opacity 600ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1); transition-delay: var(--rvd, 0ms); }
+     Default state is VISIBLE; JS opts elements in, so no-JS never ships blank.
+     Transition lives on both states so elements fade IN entering and OUT leaving. */
+  .rv.rv-prep, .rv.rv-in { transition: opacity 550ms cubic-bezier(0.22,1,0.36,1), transform 550ms cubic-bezier(0.22,1,0.36,1); transition-delay: var(--rvd, 0ms); }
+  .rv.rv-prep { opacity: 0; transform: translateY(28px); }
+  .rv.rv-in { opacity: 1; transform: none; }
 
   /* extra hover states (hover-capable devices only) */
   @media (hover: hover) {
@@ -575,9 +577,11 @@ mnav.addEventListener("click", (e) => { if (e.target.closest("a")) { mnav.datase
     e.style.setProperty("--rvd", (Math.max(0, sibs.indexOf(e)) * 80) + "ms"); // stagger within a group
     e.classList.add("rv-prep");
   });
+  // Toggle (don't unobserve): fade in on enter, fade out on leave — so scrolling
+  // back up re-hides and re-reveals.
   const io = new IntersectionObserver((ents) => {
-    for (const en of ents) if (en.isIntersecting) { en.target.classList.add("rv-in"); io.unobserve(en.target); }
-  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+    for (const en of ents) en.target.classList.toggle("rv-in", en.isIntersecting);
+  }, { rootMargin: "0px 0px -10% 0px", threshold: 0.06 });
   els.forEach((e) => io.observe(e));
 })();
 

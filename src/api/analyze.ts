@@ -105,7 +105,10 @@ export async function analyzeWallet(
       const n = await narrate(health, callLLM);
       response.health_summary = n.health_summary;
       response.activity_story = n.activity_story;
-    } catch {
+    } catch (e) {
+      // Log the real reason server-side (Railway logs); keep the wire warning
+      // generic so we don't leak internals to the caller.
+      console.error('[narration] failed, returning facts only:', e instanceof Error ? e.message : e);
       response.warnings.push('narration unavailable — facts returned without plain-English summaries');
     }
   }

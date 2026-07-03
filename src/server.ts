@@ -1,0 +1,65 @@
+import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
+import { pathToFileURL } from 'node:url';
+import { handleAnalyze } from './api/handler.ts';
+
+// Persistent HTTP server for Railway (which runs a long-lived process, unlike
+// Vercel's per-request functions). All the real logic lives in the tested
+// transport-agnostic core; this is just routing + body plumbing.
+const ROUTE = '/api/analyze';
+const MAX_BODY = 4096; // requests are tiny ({wallet_address, chain}) — cap to shut down abuse
+
+function send(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'content-type': 'application/json' });
+  res.end(JSON.stringify(body));
+}
+
+async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const path = (req.url ?? '').split('?')[0];
+
+  if (req.method === 'GET' && (path === '/' || path === '/health')) {
+    return send(res, 200, { status: 'ok' });
+  }
+  if (path !== ROUTE) {
+    return send(res, 404, { error: 'not found' });
+  }
+
+  // Buffer the body with a hard cap (trust boundary — public paid endpoint).
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let tooBig = false;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > MAX_BODY) { tooBig = true; break; }
+    chunks.push(chunk);
+  }
+  if (tooBig) return send(res, 413, { error: 'request body too large' });
+
+  const raw = Buffer.concat(chunks).toString();
+  let body: unknown = {};
+  if (raw.trim()) {
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return send(res, 400, { error: 'invalid JSON body' });
+    }
+  }
+
+  const result = await handleAnalyze(req.method, body);
+  send(res, result.status, result.body);
+}
+
+export function startServer(port = Number(process.env.PORT) || 3000): Promise<Server> {
+  return new Promise((resolve) => {
+    const server = createServer((req, res) => {
+      handle(req, res).catch(() => send(res, 500, { error: 'internal error' }));
+    });
+    server.listen(port, () => resolve(server));
+  });
+}
+
+// Auto-start only when run directly (node src/server.ts), not when imported by tests.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  const server = await startServer();
+  const addr = server.address();
+  console.log(`scope listening on ${typeof addr === 'object' && addr ? addr.port : ''}`);
+}

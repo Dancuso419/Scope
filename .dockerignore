@@ -1,0 +1,6 @@
+# Secrets come from Railway env vars, never baked into the image.
+.env
+.env.*
+.git
+node_modules
+*.md

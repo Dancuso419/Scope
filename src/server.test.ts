@@ -9,8 +9,15 @@ const server = await startServer(0);
 const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 after(() => server.close());
 
-test('GET / is a health check → 200', async () => {
+test('GET / serves the demo UI (HTML) → 200', async () => {
   const r = await fetch(`${base}/`);
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('content-type') ?? '', /text\/html/);
+  assert.match(await r.text(), /scope/i);
+});
+
+test('GET /health is the JSON health check → 200', async () => {
+  const r = await fetch(`${base}/health`);
   assert.equal(r.status, 200);
   assert.equal((await r.json() as { status: string }).status, 'ok');
 });

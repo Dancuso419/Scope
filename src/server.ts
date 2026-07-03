@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { handleAnalyze } from './api/handler.ts';
 
 // Persistent HTTP server for Railway (which runs a long-lived process, unlike
@@ -7,6 +8,10 @@ import { handleAnalyze } from './api/handler.ts';
 // transport-agnostic core; this is just routing + body plumbing.
 const ROUTE = '/api/analyze';
 const MAX_BODY = 4096; // requests are tiny ({wallet_address, chain}) — cap to shut down abuse
+
+// Demo UI, served same-origin so it provably calls the real endpoint (no CORS,
+// one deploy). Read once at startup.
+const INDEX_HTML = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8');
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json' });
@@ -16,8 +21,13 @@ function send(res: ServerResponse, status: number, body: unknown): void {
 async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const path = (req.url ?? '').split('?')[0];
 
-  if (req.method === 'GET' && (path === '/' || path === '/health')) {
+  if (req.method === 'GET' && path === '/health') {
     return send(res, 200, { status: 'ok' });
+  }
+  if (req.method === 'GET' && (path === '/' || path === '/index.html')) {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(INDEX_HTML);
+    return;
   }
   if (path !== ROUTE) {
     return send(res, 404, { error: 'not found' });

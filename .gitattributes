@@ -1,6 +1,8 @@
 # Normalize line endings. Shell scripts MUST stay LF — a CRLF shebang breaks the
 # container entrypoint (`#!/bin/sh\r` = bad interpreter).
 * text=auto
+# Binary assets — never normalize line endings (would corrupt the font).
+*.woff2 binary
 *.sh text eol=lf
 Dockerfile text eol=lf
 docker-entrypoint.sh text eol=lf

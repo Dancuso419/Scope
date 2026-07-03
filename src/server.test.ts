@@ -22,6 +22,12 @@ test('GET /health is the JSON health check → 200', async () => {
   assert.equal((await r.json() as { status: string }).status, 'ok');
 });
 
+test('GET the self-hosted font → 200 woff2', async () => {
+  const r = await fetch(`${base}/fonts/space-grotesk.woff2`);
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('content-type') ?? '', /font\/woff2/);
+});
+
 test('unknown route → 404', async () => {
   const r = await fetch(`${base}/nope`);
   assert.equal(r.status, 404);

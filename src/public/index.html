@@ -6,6 +6,13 @@
 <title>Scope — Wallet Health &amp; Story</title>
 <meta name="description" content="Scope runs a deterministic health check on any Ethereum wallet — concentration, stale approvals, dead tokens, dust — with a live dashboard and a plain-English story. An agent service on OKX.AI." />
 <style>
+  @font-face {
+    font-family: "Space Grotesk";
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+    src: url("/fonts/space-grotesk.woff2") format("woff2");
+  }
   :root {
     --platinum: #EEEEEE;
     --paper:    #FFFFFF;
@@ -18,7 +25,7 @@
     --line:     #DEDEDE;
     --red:      #D6353A;
 
-    --sans: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
     --bd: 3px solid var(--ink);
@@ -33,6 +40,8 @@
     margin: 0; background: var(--platinum); color: var(--ink);
     font-family: var(--sans); font-size: 16px; line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    /* Space Grotesk tops out at 700 — clamp our 900s to its real max, no faux-bold. */
+    font-synthesis: none;
     background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 28px 28px; background-position: -1px -1px;
   }

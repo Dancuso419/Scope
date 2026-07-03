@@ -12,6 +12,8 @@ const MAX_BODY = 4096; // requests are tiny ({wallet_address, chain}) — cap to
 // Demo UI, served same-origin so it provably calls the real endpoint (no CORS,
 // one deploy). Read once at startup.
 const INDEX_HTML = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8');
+// Self-hosted Space Grotesk (no CDN — the app stays fully self-contained).
+const FONT_WOFF2 = readFileSync(new URL('./public/fonts/space-grotesk.woff2', import.meta.url));
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json' });
@@ -23,6 +25,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (req.method === 'GET' && path === '/health') {
     return send(res, 200, { status: 'ok' });
+  }
+  if (req.method === 'GET' && path === '/fonts/space-grotesk.woff2') {
+    res.writeHead(200, { 'content-type': 'font/woff2', 'cache-control': 'public, max-age=31536000, immutable' });
+    res.end(FONT_WOFF2);
+    return;
   }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });

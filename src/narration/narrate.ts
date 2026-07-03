@@ -49,9 +49,13 @@ function factsDigest(h: WalletHealth) {
   };
 }
 
-export function buildPrompt(h: WalletHealth): string {
-  const facts = JSON.stringify(factsDigest(h), null, 2);
-  return `You are explaining a crypto wallet's health to an everyday person with NO crypto or finance background. Turn the FACTS below into two short, plain-English sections: a Health Summary and an Activity Story.
+export function buildPrompt(h: WalletHealth, chains: string[] = []): string {
+  const digest = { ...factsDigest(h), chains_scanned: chains };
+  const facts = JSON.stringify(digest, null, 2);
+  const multi = chains.length > 1
+    ? `\n- This report combines ${chains.length} blockchains (${chains.join(', ')}). Briefly mention it covers the wallet across these chains; don't repeat the list more than once.`
+    : '';
+  return `You are explaining a crypto wallet's health to an everyday person with NO crypto or finance background. Turn the FACTS below into two short, plain-English sections: a Health Summary and an Activity Story.${multi}
 
 WHO YOU'RE WRITING FOR:
 - A complete beginner. Use simple, everyday words and short sentences.
@@ -79,8 +83,8 @@ function stripFence(text: string): string {
   return (fenced ? fenced[1] : text).trim();
 }
 
-export async function narrate(h: WalletHealth, callLLM: LLMFn): Promise<Narration> {
-  const raw = await callLLM(buildPrompt(h));
+export async function narrate(h: WalletHealth, callLLM: LLMFn, chains: string[] = []): Promise<Narration> {
+  const raw = await callLLM(buildPrompt(h, chains));
   const parsed = JSON.parse(stripFence(raw)) as Partial<Narration>;
   if (typeof parsed.health_summary !== 'string' || typeof parsed.activity_story !== 'string') {
     throw new Error('narration response missing health_summary/activity_story');

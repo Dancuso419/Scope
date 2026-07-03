@@ -10,6 +10,7 @@ export interface TokenBalance {
   tokenPrice: string; // USD per token
   isRiskToken: boolean;
   chainIndex: string;
+  chain?: string; // friendly chain name, tagged during multi-chain aggregation
 }
 
 // From `onchainos market portfolio-dex-history` → data.transactionList[]
@@ -21,6 +22,7 @@ export interface DexTransaction {
   amount: string;
   price: string;
   time: string; // ms epoch
+  chain?: string;
 }
 
 // From `onchainos token price-info` → data[] (one call per held token)
@@ -29,6 +31,7 @@ export interface TokenMarket {
   tokenContractAddress: string;
   liquidity: string; // total liquidity in USD
   volume24H: string; // 24h trading volume in USD
+  chain?: string;
 }
 
 // From `onchainos security approvals` → data[].dataList[]
@@ -41,4 +44,5 @@ export interface ApprovalRecord {
   protocolName: string;
   vulnerabilityFlag: boolean;
   status: string; // "1" = active
+  chain?: string;
 }

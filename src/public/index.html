@@ -102,7 +102,23 @@
   .hint button:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); background: var(--carrot); }
   .hint button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 
+  /* chain picker */
+  .chains { margin-top: 0.9rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .chains .lbl { font-family: var(--mono); font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-right: 0.25rem; }
+  .chip { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.7rem; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; box-shadow: 2px 2px 0 var(--ink); transition: transform 100ms ease, box-shadow 100ms ease; }
+  .chip[aria-pressed="true"] { background: var(--blue); color: var(--paper); }
+  .chip:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+  .chip:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .chip:focus-visible { outline: 2px solid var(--carrot); outline-offset: 2px; }
+
   main#out { margin-top: 1.75rem; }
+
+  /* verdict banner */
+  .verdict { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.8rem; background: var(--blue); color: var(--paper); border: var(--bd); box-shadow: var(--sh); padding: 0.95rem 1.1rem; margin-bottom: 1.1rem; }
+  .verdict.flag { background: var(--carrot); color: var(--ink); }
+  .verdict .vl { font-family: var(--mono); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; border: 2px solid currentColor; padding: 0.1rem 0.5rem; }
+  .verdict .vt { font-weight: 700; font-size: 1.1rem; line-height: 1.35; }
+  .ctag { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; color: var(--muted); border: 1.5px solid var(--border, var(--line)); border-color: var(--line); padding: 0 0.3rem; margin-left: 0.4rem; text-transform: uppercase; letter-spacing: 0.03em; }
 
   /* ── dashboard ───────────────────────────────────── */
   .dash-head { font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--ink); background: var(--ink); color: var(--platinum); padding: 0.6rem 0.9rem; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: center; margin-bottom: 1rem; }
@@ -287,11 +303,11 @@
         <div class="field">
           <span class="caret">&gt;</span>
           <input id="addr" type="text" spellcheck="false" placeholder="0x… paste an Ethereum wallet address" aria-label="Wallet address" />
-          <span class="chainpill">CHAIN: ETHEREUM</span>
           <button class="run" id="run" type="submit">Run</button>
         </div>
+        <div class="chains" id="chains"><span class="lbl">scan chains:</span></div>
         <div class="hint">
-          <span>live on-chain read · ~30–60s</span>
+          <span>live on-chain read · ~30–60s · more chains = longer scan</span>
           <button type="button" id="sample">try an example wallet</button>
         </div>
       </form>
@@ -390,6 +406,8 @@ const EXAMPLES = [
 ];
 let exIdx = Math.floor(Math.random() * EXAMPLES.length) - 1;
 const SEG = ["#0038BD", "#EF8E01", "#111111", "#3D6BE5", "#F6B24A", "#7A7A7A", "#001E66", "#B36A00", "#BFBFBF"];
+const CHAINS = [["xlayer", "X Layer"], ["ethereum", "Ethereum"], ["base", "Base"], ["arbitrum", "Arbitrum"], ["bsc", "BSC"], ["polygon", "Polygon"]];
+const selected = new Set(["xlayer", "ethereum"]);
 const out = document.getElementById("out");
 const form = document.getElementById("form");
 const addr = document.getElementById("addr");
@@ -416,7 +434,22 @@ function ns(tag, attrs = {}, kids = []) {
   for (const kid of [].concat(kids)) if (kid != null) n.append(kid);
   return n;
 }
+function chainTag(c) { return c ? el("span", { class: "ctag", text: c }) : null; }
 function fmtDate(iso) { const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); }
+
+/* chain picker chips (multi-select, min 1) */
+(function buildChips() {
+  const box = document.getElementById("chains");
+  for (const [id, label] of CHAINS) {
+    const chip = el("button", { type: "button", class: "chip", "data-chain": id, "aria-pressed": String(selected.has(id)), text: label });
+    chip.addEventListener("click", () => {
+      if (selected.has(id)) { if (selected.size > 1) selected.delete(id); } // keep at least one
+      else selected.add(id);
+      chip.setAttribute("aria-pressed", String(selected.has(id)));
+    });
+    box.append(chip);
+  }
+})();
 function money(n) { const v = Number(n); return "$" + v.toLocaleString(undefined, { minimumFractionDigits: v < 1000 ? 2 : 0, maximumFractionDigits: 2 }); }
 function short(a) { return typeof a === "string" && a.length > 14 ? a.slice(0, 8) + "…" + a.slice(-4) : a; }
 
@@ -429,7 +462,7 @@ function panel(label, tag, span) {
 
 /* holdings donut */
 function donutChart(holdings) {
-  const items = holdings.map((h, i) => ({ token: h.token, share: h.share, value: h.usd_value, color: SEG[i % SEG.length] }));
+  const items = holdings.map((h, i) => ({ token: h.token, share: h.share, value: h.usd_value, chain: h.chain, color: SEG[i % SEG.length] }));
   const total = items.reduce((s, x) => s + (Number(x.value) || 0), 0) || 1;
   const R = 62, CX = 82, CY = 82, SW = 30, C = 2 * Math.PI * R;
   const svg = ns("svg", { viewBox: "0 0 164 164", width: 164, height: 164, class: "donut" });
@@ -446,6 +479,7 @@ function donutChart(holdings) {
   for (const it of items) legend.append(el("div", { class: "li" }, [
     el("span", { class: "sw", style: "background:" + it.color }),
     el("span", { class: "tk", text: it.token }),
+    chainTag(it.chain),
     el("span", { class: "sh", text: (Number(it.share) || 0).toFixed(1) + "%" }),
     el("span", { class: "vl", text: money(it.value) }),
   ]));
@@ -480,9 +514,18 @@ function render(data) {
   const frag = document.createDocumentFragment();
   const hc = data.health_check || {};
 
+  // deterministic verdict banner
+  if (data.verdict) {
+    const healthy = /looks healthy/i.test(data.verdict);
+    frag.append(el("div", { class: "verdict reveal-js" + (healthy ? "" : " flag") }, [
+      el("span", { class: "vl", text: "VERDICT" }),
+      el("span", { class: "vt", text: data.verdict }),
+    ]));
+  }
+
   frag.append(el("div", { class: "dash-head reveal-js" }, [
     el("span", {}, [document.createTextNode("WALLET "), el("b", { text: short(data.wallet_address) })]),
-    el("span", { text: "CHAIN " + (data.chain || "").toUpperCase() }),
+    el("span", { text: "CHAINS " + (data.chains || []).join(" · ").toUpperCase() }),
     el("span", { class: "ok", text: "✓ SCANNED" }),
   ]));
 
@@ -514,7 +557,7 @@ function render(data) {
     p.body.append(el("div", { class: "cap", text: "Old permissions letting apps move this wallet's tokens. Forgotten ones are a security risk worth reviewing." }));
     p.body.append(el("div", { class: "bignum" }, [document.createTextNode(String(list.length)), el("small", { text: "flagged" })]));
     if (!list.length) p.body.append(el("div", { class: "empty", style: "margin-top:.5rem", text: "no unlimited, long-stale, or vulnerable approvals." }));
-    else { const ul = el("ul", { class: "rows" }); for (const a of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: a.token || short(a.contract) }), el("span", { class: "mt", text: fmtDate(a.granted_at) })])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
+    else { const ul = el("ul", { class: "rows" }); for (const a of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: a.token || short(a.contract) }), chainTag(a.chain), el("span", { class: "mt", text: fmtDate(a.granted_at) })])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
     add(p.root); }
 
   /* dead / illiquid */
@@ -523,7 +566,7 @@ function render(data) {
     p.body.append(el("div", { class: "cap", text: "Tokens that are hard to sell — barely any active market to trade them in." }));
     p.body.append(el("div", { class: "bignum" }, [document.createTextNode(String(list.length)), el("small", { text: "tokens" })]));
     if (!list.length) p.body.append(el("div", { class: "empty", style: "margin-top:.5rem", text: "held tokens have real, active markets." }));
-    else { const ul = el("ul", { class: "rows" }); for (const d of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: d.token })])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
+    else { const ul = el("ul", { class: "rows" }); for (const d of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: d.token }), chainTag(d.chain)])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
     add(p.root); }
 
   /* dust */
@@ -603,7 +646,7 @@ async function analyze(address) {
   stopLoading(); showLoading();
   runBtn.disabled = true; runBtn.textContent = "…";
   try {
-    const res = await fetch(ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ wallet_address: address, chain: "ethereum" }) });
+    const res = await fetch(ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ wallet_address: address, chains: [...selected] }) });
     let data = null; try { data = await res.json(); } catch {}
     stopLoading();
     if (!res.ok) { const msg = (data && data.error) || ("the service returned " + res.status + "."); showError(res.status, res.status === 502 ? "couldn't read this wallet upstream — try again in a moment." : msg); }

@@ -6,6 +6,7 @@ export interface DustItem {
   token: string;
   usd_value: number;
   disclaimer: string;
+  chain?: string;
 }
 
 // Mandatory per PRD/TRD: every dust-flagged token must carry this text.
@@ -21,7 +22,7 @@ export function detectDust(tokens: TokenBalance[]): DustItem[] {
     if (balance === null || price === null) continue; // malformed record: skip
     const value = balance * price;
     if (value > 0 && value < DUST_MAX_USD) {
-      dust.push({ token: t.symbol, usd_value: value, disclaimer: DUST_DISCLAIMER });
+      dust.push({ token: t.symbol, usd_value: value, disclaimer: DUST_DISCLAIMER, chain: t.chain });
     }
   }
   // Highest-value first, capped: on spam-heavy wallets the cheapest airdrops

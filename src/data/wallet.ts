@@ -126,3 +126,35 @@ export async function getWalletData(
 
   return { balances, approvals, dexHistory, markets, failed };
 }
+
+// Multi-chain: scan every selected chain in parallel and aggregate into one
+// WalletData, tagging every record with its chain so the union keeps its
+// origin. `failed` is namespaced per chain (e.g. "balances:base"), and
+// `balancesAllFailed` is true only when NO chain returned balances — the
+// endpoint uses that to decide 502 vs a per-chain warning.
+export interface MultiWalletData extends WalletData {
+  chains: string[];
+  balancesAllFailed: boolean;
+}
+
+export async function getWalletDataMulti(
+  address: string,
+  chains: string[],
+  run: RunFn,
+  now = Date.now(),
+): Promise<MultiWalletData> {
+  const per = await Promise.all(
+    chains.map(async (chain) => ({ chain, d: await getWalletData(address, chain, run, now) })),
+  );
+  const tag = <T>(arr: T[], chain: string): T[] => arr.map((x) => ({ ...x, chain }));
+
+  return {
+    balances: per.flatMap((p) => tag(p.d.balances, p.chain)),
+    approvals: per.flatMap((p) => tag(p.d.approvals, p.chain)),
+    dexHistory: per.flatMap((p) => tag(p.d.dexHistory, p.chain)),
+    markets: per.flatMap((p) => tag(p.d.markets, p.chain)),
+    failed: per.flatMap((p) => p.d.failed.map((s) => `${s}:${p.chain}` as FailedSlice)),
+    chains,
+    balancesAllFailed: per.every((p) => p.d.failed.includes('balances')),
+  };
+}

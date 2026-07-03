@@ -7,6 +7,7 @@ export interface DeadToken {
   liquidityUsd: number;
   volume24hUsd: number;
   reason: 'illiquid' | 'inactive' | 'illiquid-and-inactive';
+  chain?: string;
 }
 
 export function findDeadTokens(markets: TokenMarket[]): DeadToken[] {
@@ -23,7 +24,7 @@ export function findDeadTokens(markets: TokenMarket[]): DeadToken[] {
     if (!illiquid && !inactive) continue;
     const reason =
       illiquid && inactive ? 'illiquid-and-inactive' : illiquid ? 'illiquid' : 'inactive';
-    dead.push({ token: m.symbol, liquidityUsd, volume24hUsd, reason });
+    dead.push({ token: m.symbol, liquidityUsd, volume24hUsd, reason, chain: m.chain });
   }
   return dead;
 }

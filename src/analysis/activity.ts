@@ -17,6 +17,7 @@ export interface NotableEvent {
   token: string;
   valueUsd: number;
   at: string; // ISO
+  chain?: string;
 }
 
 export interface ActivityTimeline {
@@ -35,7 +36,7 @@ export function buildActivityTimeline(txs: DexTransaction[]): ActivityTimeline {
     const action = ACTION_BY_TYPE[tx.type];
     // malformed record: skip, don't throw on Invalid Date or rank NaN values
     if (!action || valueUsd === null || time === null || valueUsd < ACTIVITY_MIN_USD) continue;
-    events.push({ action, token: tx.tokenSymbol, valueUsd, at: new Date(time).toISOString() });
+    events.push({ action, token: tx.tokenSymbol, valueUsd, at: new Date(time).toISOString(), chain: tx.chain });
   }
 
   if (events.length === 0) {

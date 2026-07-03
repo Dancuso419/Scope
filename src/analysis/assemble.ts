@@ -22,7 +22,7 @@ export interface WalletHealth {
   activity: ActivityTimeline;
   // Credible tokens by USD value, descending — feeds the holdings chart. Spam is
   // already gated out, so this is the real, liquid portfolio breakdown.
-  holdings: { symbol: string; usdValue: number }[];
+  holdings: { symbol: string; usdValue: number; chain?: string }[];
   liquidity: {
     credibleTokens: number;
     totalTokens: number;
@@ -65,7 +65,7 @@ export function assembleHealth(input: AssembleInput, now = Date.now()): WalletHe
   );
 
   const holdings = liquidBalances
-    .map((b) => ({ symbol: b.symbol, usdValue: (parseNum(b.balance) ?? 0) * (parseNum(b.tokenPrice) ?? 0) }))
+    .map((b) => ({ symbol: b.symbol, usdValue: (parseNum(b.balance) ?? 0) * (parseNum(b.tokenPrice) ?? 0), chain: b.chain }))
     .filter((h) => h.usdValue > 0)
     .sort((a, b) => b.usdValue - a.usdValue);
 

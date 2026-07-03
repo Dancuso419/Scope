@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getWalletData, type RunFn } from './wallet.ts';
+import { getWalletData, getWalletDataMulti, type RunFn } from './wallet.ts';
 import { MARKET_BATCH_SIZE, MARKET_LOOKUP_BUDGET, PAGE_LIMIT } from './config.ts';
 
 // A fake `run` that returns canned JSON per subcommand, and records calls.
@@ -181,6 +181,28 @@ test('all slices healthy → failed is empty', async () => {
   const { run } = fakeRun();
   const data = await getWalletData('0xwallet', 'ethereum', run);
   assert.deepEqual(data.failed, []);
+});
+
+test('getWalletDataMulti aggregates all chains and tags every record with its chain', async () => {
+  const { run } = fakeRun();
+  const data = await getWalletDataMulti('0xwallet', ['ethereum', 'base'], run);
+  // balances from both chains, each tagged
+  assert.equal(data.balances.length, 4); // 2 tokens × 2 chains
+  assert.deepEqual([...new Set(data.balances.map((b) => b.chain))].sort(), ['base', 'ethereum']);
+  assert.ok(data.approvals.every((a) => a.chain));
+  assert.deepEqual(data.chains, ['ethereum', 'base']);
+  assert.equal(data.balancesAllFailed, false);
+});
+
+test('getWalletDataMulti namespaces failures by chain and only flags all-failed when every chain fails', async () => {
+  const { run: base } = fakeRun();
+  const run: RunFn = async (args) => {
+    if (args[0] === 'portfolio' && args.includes('base')) throw new Error('base down');
+    return base(args);
+  };
+  const data = await getWalletDataMulti('0xwallet', ['ethereum', 'base'], run);
+  assert.ok(data.failed.includes('balances:base'));
+  assert.equal(data.balancesAllFailed, false); // ethereum still returned balances
 });
 
 test('a single failing price-info call does not sink the wallet view', async () => {

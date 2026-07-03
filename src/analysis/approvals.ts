@@ -7,6 +7,7 @@ export interface RiskyApproval {
   granted_at: string; // ISO date
   unlimited: boolean;
   reason: 'unlimited-and-stale' | 'flagged-vulnerable';
+  chain?: string;
 }
 
 // No legitimate token has a balance near 2^255 base units, so an approval at or
@@ -38,6 +39,7 @@ export function findRiskyApprovals(approvals: ApprovalRecord[], now = Date.now()
       granted_at: new Date(a.blockTime).toISOString(),
       unlimited,
       reason,
+      chain: a.chain,
     });
   }
   return risky;

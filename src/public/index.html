@@ -50,16 +50,43 @@
 
   /* ── nav ─────────────────────────────────────────── */
   nav { position: sticky; top: 0; z-index: var(--z-nav); background: var(--paper); border-bottom: var(--bd); }
-  nav .in { max-width: 1120px; margin: 0 auto; padding: 0.75rem clamp(1.1rem, 4vw, 2.5rem); display: flex; align-items: center; gap: 1rem; }
-  nav .mark { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
-  nav .mark i { font-style: normal; color: var(--carrot); }
+  nav .in { max-width: 1120px; margin: 0 auto; padding: 0.65rem clamp(1rem, 4vw, 2.5rem); display: flex; align-items: center; gap: 0.9rem; }
+
+  /* typographic logo: pressed carrot block + tight heavy wordmark */
+  .logo { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--ink); }
+  .logo .lg-box { display: grid; place-items: center; width: 2rem; height: 2rem; background: var(--carrot); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); font-family: var(--mono); font-weight: 700; font-size: 1.05rem; line-height: 1; transition: transform 110ms ease, box-shadow 110ms ease; }
+  .logo .lg-word { font-family: var(--sans); font-weight: 700; font-size: 1.3rem; letter-spacing: -0.055em; text-transform: uppercase; line-height: 1; }
+  .logo .lg-word b { color: var(--blue); font-weight: 700; }
+  .logo .lg-sub { display: block; font-family: var(--mono); font-size: 0.52rem; font-weight: 700; letter-spacing: 0.34em; text-transform: uppercase; color: var(--muted); margin-top: 0.22rem; }
+  .logo:hover .lg-box { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+  .logo:active .lg-box { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .logo:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
   nav .links { display: flex; gap: 0.35rem; margin-left: auto; }
-  nav .links a { color: var(--ink); font-size: 0.82rem; font-weight: 700; padding: 0.35rem 0.65rem; border: 2px solid transparent; }
+  nav .links a { color: var(--ink); font-size: 0.82rem; font-weight: 700; padding: 0.35rem 0.65rem; border: 2px solid transparent; transition: background 110ms ease; }
   nav .links a:hover { border-color: var(--ink); background: var(--carrot); }
   nav .status { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 0.3rem 0.6rem; border: 2px solid var(--ink); background: var(--platinum); }
   nav .status .dot { width: 8px; height: 8px; background: var(--muted); border: 1.5px solid var(--ink); }
   nav .status.up .dot { background: var(--blue); }
-  @media (max-width: 720px) { nav .links { display: none; } }
+
+  /* mobile menu */
+  .menu-btn { display: none; margin-left: auto; width: 2.4rem; height: 2.4rem; background: var(--paper); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); cursor: pointer; padding: 0; place-items: center; transition: transform 100ms ease, box-shadow 100ms ease; }
+  .menu-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .menu-btn .bars { display: block; width: 1.1rem; height: 2.5px; background: var(--ink); position: relative; }
+  .menu-btn .bars::before, .menu-btn .bars::after { content: ""; position: absolute; left: 0; width: 100%; height: 2.5px; background: var(--ink); transition: transform 150ms ease; }
+  .menu-btn .bars::before { top: -6px; } .menu-btn .bars::after { top: 6px; }
+  .menu-btn[aria-expanded="true"] .bars { background: transparent; }
+  .menu-btn[aria-expanded="true"] .bars::before { transform: translateY(6px) rotate(45deg); }
+  .menu-btn[aria-expanded="true"] .bars::after { transform: translateY(-6px) rotate(-45deg); }
+  .mnav { display: none; }
+  @media (max-width: 720px) {
+    nav .links, nav .status { display: none; }
+    .menu-btn { display: grid; }
+    .mnav[data-open="true"] { display: block; background: var(--paper); border-bottom: var(--bd); }
+    .mnav a { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem clamp(1rem, 4vw, 2.5rem); border-top: 2px dashed var(--line); color: var(--ink); font-weight: 700; font-size: 1rem; }
+    .mnav a:active { background: var(--carrot); }
+    .mnav .mstatus { display: flex; gap: 0.5rem; align-items: center; padding: 0.8rem clamp(1rem, 4vw, 2.5rem); border-top: 2px dashed var(--line); font-family: var(--mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  }
 
   section { position: relative; padding: clamp(3rem, 8vw, 6rem) 0; }
   .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: clamp(1.75rem, 4vw, 2.75rem); flex-wrap: wrap; }
@@ -259,22 +286,56 @@
 
   .reveal-js { animation: rise 400ms cubic-bezier(0.22,1,0.36,1) both; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .reveal { opacity: 0; animation: revealScroll linear both; animation-timeline: view(); animation-range: entry 2% cover 26%; }
-      @keyframes revealScroll { from { opacity: 0; transform: translateY(34px); } to { opacity: 1; transform: none; } }
-    }
-  }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } .cur { opacity: 1; } }
 
+  /* scroll reveals — IntersectionObserver-driven, works in every browser.
+     Default state is VISIBLE; JS opts elements in, so no-JS never ships blank. */
+  .rv.rv-prep { opacity: 0; transform: translateY(30px); }
+  .rv.rv-in { opacity: 1; transform: none; transition: opacity 600ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1); transition-delay: var(--rvd, 0ms); }
+
+  /* extra hover states (hover-capable devices only) */
+  @media (hover: hover) {
+    ul.rows li, .legend .li, .dustbar { transition: background 100ms ease; }
+    ul.rows li:hover, .legend .li:hover { background: var(--platinum); }
+    .guarantees .g { transition: transform 110ms ease, box-shadow 110ms ease; }
+    .guarantees .g:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); background: var(--carrot); }
+    .code { transition: transform 130ms ease, box-shadow 130ms ease; }
+    .code:hover { transform: translate(-3px, -3px); box-shadow: var(--sh-lg); }
+    .eco-stats .s .n { transition: color 130ms ease; }
+    .eco-stats .s:hover .n { color: var(--blue); }
+    .verdict { transition: transform 130ms ease, box-shadow 130ms ease; }
+    .verdict:hover { transform: translate(-2px, -2px); box-shadow: var(--sh-lg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } .cur { opacity: 1; } .rv.rv-prep { opacity: 1; transform: none; } }
+
+  /* ── device optimization ─────────────────────────── */
+  .tlwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tlwrap .tl { min-width: 480px; }
   @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .panel.span2 { grid-column: auto; } }
-  @media (max-width: 520px) { .kv { grid-template-columns: 1fr; gap: 0.1rem; } .kv dd { margin-bottom: 0.4rem; } }
+  @media (max-width: 520px) {
+    .kv { grid-template-columns: 1fr; gap: 0.1rem; } .kv dd { margin-bottom: 0.4rem; }
+    input[type=text] { font-size: 16px; padding: 0.85rem 0.3rem; } /* ≥16px stops iOS focus-zoom */
+    button.run { padding: 0 1.05rem; font-size: 0.82rem; }
+    .caret { padding-left: 0.65rem; }
+    .verdict .vt { font-size: 1rem; }
+    .bignum, .gauge .big { font-size: 2.3rem; }
+    .dustbar { grid-template-columns: 5rem 1fr max-content; }
+    .heros, .eco-stats { gap: 1.4rem 2rem; }
+    .scanviz { max-width: 260px; }
+    .cta .btn { width: 100%; }
+  }
 </style>
 </head>
 <body>
 <nav>
   <div class="in">
-    <span class="mark">SCOPE<i>/</i></span>
+    <a class="logo" href="#top" aria-label="Scope — home">
+      <span class="lg-box">&gt;</span>
+      <span>
+        <span class="lg-word">SC<b>O</b>PE</span>
+        <span class="lg-sub">Wallet Health</span>
+      </span>
+    </a>
     <span class="links">
       <a href="#checks">Checks</a>
       <a href="#chains">Chains</a>
@@ -282,6 +343,14 @@
       <a href="#api">API</a>
     </span>
     <span class="status" id="status"><span class="dot"></span><span id="statusText">checking</span></span>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mnav" aria-label="Menu"><span class="bars"></span></button>
+  </div>
+  <div class="mnav" id="mnav" data-open="false">
+    <a href="#checks">Checks <span>→</span></a>
+    <a href="#chains">Chains <span>→</span></a>
+    <a href="#method">Method <span>→</span></a>
+    <a href="#api">API <span>→</span></a>
+    <div class="mstatus"><span class="dot" style="width:8px;height:8px;background:var(--blue);border:1.5px solid var(--ink)"></span><span id="statusTextM">checking</span></div>
   </div>
 </nav>
 
@@ -341,18 +410,18 @@
 
   <!-- ── checks ── -->
   <section id="checks">
-    <div class="sec-head">
+    <div class="sec-head rv">
       <div>
         <div class="micro kicker">The readout</div>
         <h2 class="title">Four checks, two stories</h2>
       </div>
       <p class="lede">Every figure is computed by rule-based code — same input, same result. The narration only describes those numbers; it never produces them.</p>
     </div>
-    <div class="cards reveal">
-      <div class="card"><div class="no">01</div><h3>Concentration</h3><p>How much of the wallet's <b>liquid</b> value sits in one token. Spam with fabricated prices is filtered out first, so a fake “$5M” airdrop can't distort it.</p><span class="rule-tag">flags at ≥ 70% in one token</span></div>
-      <div class="card"><div class="no">02</div><h3>Stale approvals</h3><p>Spending permissions the wallet granted and forgot — <b>unlimited</b>, long-standing, still active, or flagged vulnerable. The quiet attack surface.</p><span class="rule-tag">unlimited + &gt; 180 days + active</span></div>
-      <div class="card"><div class="no">03</div><h3>Dead / illiquid</h3><p>Held tokens whose on-chain market is too thin to exit cleanly — little liquidity or almost no recent trading.</p><span class="rule-tag">&lt; $10k liquidity or &lt; $100 / 24h</span></div>
-      <div class="card"><div class="no">04</div><h3>Value-only dust</h3><p>Sub-$2 holdings, valued only. Always shown with a <b>mandatory disclaimer</b>: it ignores gas, liquidity, and spam/airdrop origin.</p><span class="rule-tag">holdings worth &lt; $2</span></div>
+    <div class="cards">
+      <div class="card rv"><div class="no">01</div><h3>Concentration</h3><p>How much of the wallet's <b>liquid</b> value sits in one token. Spam with fabricated prices is filtered out first, so a fake “$5M” airdrop can't distort it.</p><span class="rule-tag">flags at ≥ 70% in one token</span></div>
+      <div class="card rv"><div class="no">02</div><h3>Stale approvals</h3><p>Spending permissions the wallet granted and forgot — <b>unlimited</b>, long-standing, still active, or flagged vulnerable. The quiet attack surface.</p><span class="rule-tag">unlimited + &gt; 180 days + active</span></div>
+      <div class="card rv"><div class="no">03</div><h3>Dead / illiquid</h3><p>Held tokens whose on-chain market is too thin to exit cleanly — little liquidity or almost no recent trading.</p><span class="rule-tag">&lt; $10k liquidity or &lt; $100 / 24h</span></div>
+      <div class="card rv"><div class="no">04</div><h3>Value-only dust</h3><p>Sub-$2 holdings, valued only. Always shown with a <b>mandatory disclaimer</b>: it ignores gas, liquidity, and spam/airdrop origin.</p><span class="rule-tag">holdings worth &lt; $2</span></div>
     </div>
   </section>
 
@@ -361,7 +430,7 @@
   <!-- ── chains / ecosystem ── -->
   <section id="chains">
     <div class="eco">
-      <div>
+      <div class="rv">
         <div class="micro kicker">Coverage</div>
         <h2 class="title">Built for your whole on-chain footprint.</h2>
         <p class="lede" style="margin-top:1.1rem">Pick one chain or several. Scope scans them in parallel and merges everything into a single report — your true cross-chain concentration, holdings, and activity, each item tagged by its chain.</p>
@@ -371,7 +440,7 @@
           <div class="s"><div class="n">100%</div><div class="l micro">deterministic</div></div>
         </div>
       </div>
-      <div class="netwrap">
+      <div class="netwrap rv">
         <svg class="net" viewBox="0 0 360 300" fill="none" aria-hidden="true">
           <g stroke="#111111" stroke-width="1.5">
             <line x1="180" y1="150" x2="70" y2="60"/><line x1="180" y1="150" x2="300" y2="60"/>
@@ -396,9 +465,9 @@
   <!-- ── manifesto ── -->
   <section class="manifesto" id="method">
     <div class="micro kicker">Methodology</div>
-    <q>Every number is computed by code. <b>The model only writes the words.</b> Nothing is invented, nothing is advised.</q>
-    <p class="lede by">The analysis layer is deterministic, non-LLM code reading live on-chain data. Gemini receives the already-computed, pre-rounded facts and turns them into plain English — it can't alter a figure or give financial advice. If narration fails, the facts still return.</p>
-    <div class="guarantees">
+    <q class="rv">Every number is computed by code. <b>The model only writes the words.</b> Nothing is invented, nothing is advised.</q>
+    <p class="lede by rv">The analysis layer is deterministic, non-LLM code reading live on-chain data. Gemini receives the already-computed, pre-rounded facts and turns them into plain English — it can't alter a figure or give financial advice. If narration fails, the facts still return.</p>
+    <div class="guarantees rv">
       <span class="g"><b>✓</b> no price predictions</span>
       <span class="g"><b>✓</b> no buy / sell / hold language</span>
       <span class="g"><b>✓</b> numbers never model-generated</span>
@@ -409,15 +478,15 @@
 
   <!-- ── api ── -->
   <section id="api">
-    <div class="sec-head">
+    <div class="sec-head rv">
       <div>
         <div class="micro kicker">For agents</div>
         <h2 class="title">One endpoint, a stable contract.</h2>
       </div>
       <p class="lede">Scope is an A2MCP service — a fixed request in, a fixed shape out. This page calls the exact endpoint below; there is no separate mock.</p>
     </div>
-    <div class="api reveal">
-      <div class="code">
+    <div class="api">
+      <div class="code rv">
         <div class="cbar"><span class="verb">POST</span><span class="path" id="apiPath">/api/analyze</span></div>
         <pre><span class="c">// request</span>
 {
@@ -425,7 +494,7 @@
   <span class="k">"chains"</span>: [<span class="s">"xlayer"</span>, <span class="s">"ethereum"</span>]
 }</pre>
       </div>
-      <div class="code">
+      <div class="code rv">
         <div class="cbar"><span class="verb">200</span><span class="path">application/json</span></div>
 <pre>{
   <span class="k">"verdict"</span>: <span class="s">"…"</span>,
@@ -439,8 +508,8 @@
 
   <!-- ── cta ── -->
   <section class="cta">
-    <h2>Take full control<br>of your crypto.</h2>
-    <a class="btn" href="#top">Scan a wallet</a>
+    <h2 class="rv">Take full control<br>of your crypto.</h2>
+    <a class="btn rv" href="#top">Scan a wallet</a>
   </section>
 </div>
 
@@ -479,7 +548,34 @@ document.getElementById("epFoot").textContent = location.host;
 fetch("/health").then((r) => r.ok ? r.json() : Promise.reject()).then(() => {
   document.getElementById("status").classList.add("up");
   document.getElementById("statusText").textContent = "operational";
-}).catch(() => { document.getElementById("statusText").textContent = "unreachable"; });
+  document.getElementById("statusTextM").textContent = "operational";
+}).catch(() => { document.getElementById("statusText").textContent = "unreachable"; document.getElementById("statusTextM").textContent = "unreachable"; });
+
+/* mobile menu */
+const menuBtn = document.getElementById("menuBtn");
+const mnav = document.getElementById("mnav");
+menuBtn.addEventListener("click", () => {
+  const open = mnav.dataset.open !== "true";
+  mnav.dataset.open = String(open);
+  menuBtn.setAttribute("aria-expanded", String(open));
+});
+mnav.addEventListener("click", (e) => { if (e.target.closest("a")) { mnav.dataset.open = "false"; menuBtn.setAttribute("aria-expanded", "false"); } });
+
+/* scroll reveals — IntersectionObserver, works in every browser. Content is
+   visible by default; it's only hidden once JS is running and can reveal it. */
+(function () {
+  const els = [...document.querySelectorAll(".rv")];
+  if (!els.length || !("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  els.forEach((e) => {
+    const sibs = e.parentElement ? [...e.parentElement.children].filter((c) => c.classList.contains("rv")) : [e];
+    e.style.setProperty("--rvd", (Math.max(0, sibs.indexOf(e)) * 80) + "ms"); // stagger within a group
+    e.classList.add("rv-prep");
+  });
+  const io = new IntersectionObserver((ents) => {
+    for (const en of ents) if (en.isIntersecting) { en.target.classList.add("rv-in"); io.unobserve(en.target); }
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+  els.forEach((e) => io.observe(e));
+})();
 
 function el(tag, props = {}, kids = []) {
   const n = document.createElement(tag);
@@ -642,7 +738,7 @@ function render(data) {
     p.body.append(el("div", { class: "cap", text: "The wallet's most notable trades and transfers over the recent window — its story, in order." }));
     if (act.event_count) {
       const tl = timelineChart(act);
-      p.body.append(tl.svg);
+      p.body.append(el("div", { class: "tlwrap" }, [tl.svg]));
       if (tl.t0 != null) p.body.append(el("div", { class: "tl-axis" }, [el("span", { text: fmtDate(new Date(tl.t0).toISOString()) }), el("span", { text: fmtDate(new Date(tl.t1).toISOString()) })]));
       p.body.append(el("div", { class: "tl-legend", text: "blue = buy · orange = sell · black = transfer · size = value" }));
     } else p.body.append(el("div", { class: "empty", text: "no notable activity in the window." }));

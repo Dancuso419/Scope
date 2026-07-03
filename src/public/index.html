@@ -116,6 +116,8 @@
   .tg.ok { background: var(--blue); color: var(--paper); }
   .tg.warn { background: var(--carrot); color: var(--ink); }
   .panel > .pb { padding: 1rem 0.95rem; }
+  /* plain-language explainer for non-technical readers, above each panel's data */
+  .pb .cap { font-size: 0.82rem; color: var(--muted); line-height: 1.45; margin-bottom: 0.85rem; padding-bottom: 0.7rem; border-bottom: 2px dashed var(--line); }
   @media (hover: hover) {
     .panel { transition: transform 130ms cubic-bezier(0.22,1,0.36,1), box-shadow 130ms ease; }
     .panel:hover { transform: translate(-3px, -3px); box-shadow: var(--sh-lg); }
@@ -378,7 +380,15 @@
 <script>
 "use strict";
 const ENDPOINT = "/api/analyze";
-const SAMPLE = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+// A few verified, active Ethereum wallets to demo with — cycled on each click.
+const EXAMPLES = [
+  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+  "0x220866B1A2219f40e72f5c628B65D54268cA3A9D",
+  "0x28C6c06298d514Db089934071355E5743bf21d60",
+  "0x983110309620D911731Ac0932219af06091b6744",
+];
+let exIdx = Math.floor(Math.random() * EXAMPLES.length) - 1;
 const SEG = ["#0038BD", "#EF8E01", "#111111", "#3D6BE5", "#F6B24A", "#7A7A7A", "#001E66", "#B36A00", "#BFBFBF"];
 const out = document.getElementById("out");
 const form = document.getElementById("form");
@@ -482,6 +492,7 @@ function render(data) {
 
   /* holdings */
   { const p = panel("holdings", { kind: "ok", text: (data.holdings || []).length + " tokens" }, true);
+    p.body.append(el("div", { class: "cap", text: "Everything of real value this wallet holds, sized by how big a slice it is." }));
     if ((data.holdings || []).length) p.body.append(donutChart(data.holdings));
     else p.body.append(el("div", { class: "empty", text: "no liquid holdings to break down." }));
     add(p.root); }
@@ -489,6 +500,7 @@ function render(data) {
   /* concentration gauge */
   { const c = hc.concentration_risk || {}; const flagged = !!c.flagged; const pct = Number(c.percentage) || 0;
     const p = panel("concentration", flagged ? { kind: "warn", text: "⚠ concentrated" } : { kind: "ok", text: "ok" });
+    p.body.append(el("div", { class: "cap", text: "How much of the value sits in one coin. Above 70% means most of it rides on a single token — riskier if that one drops." }));
     p.body.append(el("div", { class: "gauge" }, [
       el("div", { class: "big" }, [document.createTextNode(pct.toFixed(1)), el("small", { text: "%" }), el("span", { class: "tok", text: c.top_token ? "· " + c.top_token : "" })]),
       (() => { const tr = el("div", { class: "track" + (flagged ? " warn" : "") }, [el("i"), el("span", { class: "thr", style: "left:70%" })]); requestAnimationFrame(() => { tr.firstChild.style.width = Math.min(100, pct) + "%"; }); return tr; })(),
@@ -499,7 +511,8 @@ function render(data) {
   /* stale approvals */
   { const list = hc.stale_approvals || [];
     const p = panel("stale approvals", { kind: list.length ? "warn" : "ok", text: String(list.length) });
-    p.body.append(el("div", { class: "bignum" }, [document.createTextNode(String(list.length)), el("small", { text: list.length === 1 ? "flagged" : "flagged" })]));
+    p.body.append(el("div", { class: "cap", text: "Old permissions letting apps move this wallet's tokens. Forgotten ones are a security risk worth reviewing." }));
+    p.body.append(el("div", { class: "bignum" }, [document.createTextNode(String(list.length)), el("small", { text: "flagged" })]));
     if (!list.length) p.body.append(el("div", { class: "empty", style: "margin-top:.5rem", text: "no unlimited, long-stale, or vulnerable approvals." }));
     else { const ul = el("ul", { class: "rows" }); for (const a of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: a.token || short(a.contract) }), el("span", { class: "mt", text: fmtDate(a.granted_at) })])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
     add(p.root); }
@@ -507,6 +520,7 @@ function render(data) {
   /* dead / illiquid */
   { const list = hc.dead_tokens || [];
     const p = panel("dead / illiquid", { kind: list.length ? "warn" : "ok", text: String(list.length) });
+    p.body.append(el("div", { class: "cap", text: "Tokens that are hard to sell — barely any active market to trade them in." }));
     p.body.append(el("div", { class: "bignum" }, [document.createTextNode(String(list.length)), el("small", { text: "tokens" })]));
     if (!list.length) p.body.append(el("div", { class: "empty", style: "margin-top:.5rem", text: "held tokens have real, active markets." }));
     else { const ul = el("ul", { class: "rows" }); for (const d of list.slice(0, 6)) ul.append(el("li", {}, [el("span", { class: "tk", text: d.token })])); p.body.append(ul); if (list.length > 6) p.body.append(el("div", { class: "empty", style: "margin-top:.4rem", text: "+ " + (list.length - 6) + " more" })); }
@@ -515,6 +529,7 @@ function render(data) {
   /* dust */
   { const list = hc.dust || [];
     const p = panel("value-only dust", { kind: list.length ? "warn" : "ok", text: String(list.length) }, true);
+    p.body.append(el("div", { class: "cap", text: "Tiny leftover balances, each worth under $2 — often too small to be worth moving." }));
     if (!list.length) p.body.append(el("div", { class: "empty", text: "no sub-$2 holdings detected." }));
     else {
       const max = Math.max(...list.map((d) => Number(d.usd_value) || 0), 0.01);
@@ -532,6 +547,7 @@ function render(data) {
 
   /* activity timeline + story */
   { const act = data.activity || {}; const p = panel("activity", { kind: "ok", text: (act.event_count || 0) + " events" }, true);
+    p.body.append(el("div", { class: "cap", text: "The wallet's most notable trades and transfers over the recent window — its story, in order." }));
     if (act.event_count) {
       const tl = timelineChart(act);
       p.body.append(tl.svg);
@@ -597,7 +613,12 @@ async function analyze(address) {
 }
 
 form.addEventListener("submit", (e) => { e.preventDefault(); const v = addr.value.trim(); if (!v) { addr.focus(); return; } analyze(v); });
-document.getElementById("sample").addEventListener("click", () => { addr.value = SAMPLE; addr.focus(); });
+document.getElementById("sample").addEventListener("click", (e) => {
+  exIdx = (exIdx + 1 + EXAMPLES.length) % EXAMPLES.length;
+  addr.value = EXAMPLES[exIdx];
+  addr.focus();
+  e.target.textContent = "try another wallet";
+});
 showIdle();
 </script>
 </body>

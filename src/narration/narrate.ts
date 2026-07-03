@@ -51,15 +51,20 @@ function factsDigest(h: WalletHealth) {
 
 export function buildPrompt(h: WalletHealth): string {
   const facts = JSON.stringify(factsDigest(h), null, 2);
-  return `You are a wallet-analysis narrator. Convert the FACTS below into plain English for two sections: a Health Check summary and an Activity Story.
+  return `You are explaining a crypto wallet's health to an everyday person with NO crypto or finance background. Turn the FACTS below into two short, plain-English sections: a Health Summary and an Activity Story.
+
+WHO YOU'RE WRITING FOR:
+- A complete beginner. Use simple, everyday words and short sentences.
+- Avoid jargon. When a term is unavoidable, explain it in a few plain words the first time — e.g. an "approval" is permission the wallet gave an app to move its tokens; "liquidity" is how easily a token can be sold.
+- Say what each finding means for this person and why it matters, calmly and clearly — no scare tactics, no hype.
 
 HARD RULES — follow exactly:
 - Use ONLY the numbers, dates, tokens, and counts present in FACTS. Do not invent, estimate, alter, or make up any figure.
-- For quantities, use the provided "count" fields verbatim. Do NOT re-count, enumerate, or list every item — name only the tokens in each "sample" and refer to the remainder by the count (e.g. "45 stale approvals, including MOODENG and BITE").
+- For quantities, use the provided "count" fields verbatim. Do NOT re-count, enumerate, or list every item — name only the tokens in each "sample" and refer to the rest by the count (e.g. "45 old permissions, including MOODENG and BITE").
 - Do NOT give investment advice, price predictions, or any buy / sell / hold language.
-- Neutral, factual, concise plain English — a few sentences per section. No emojis, no marketing tone.
-- If "liquid_holdings_insufficient" is true, state plainly that there are insufficient liquid holdings to assess concentration, and do not report a concentration percentage.
-- If a section has no data (a count of 0, or no activity), say so briefly rather than padding.
+- No emojis, no marketing tone. A few short sentences per section.
+- If "liquid_holdings_insufficient" is true, just say there aren't enough easily-sellable holdings to judge whether the wallet is over-concentrated, and don't give a concentration percentage.
+- If a section has no data (a count of 0, or no activity), say so simply in one line.
 
 FACTS:
 ${facts}

@@ -60,9 +60,15 @@ test('buildPrompt gives explicit counts and caps the sample so the model cannot 
   assert.match(p, /do not (re-?count|enumerate|list every)/i);
 });
 
+test('buildPrompt instructs plain, non-technical language for a beginner', () => {
+  const p = buildPrompt(health());
+  assert.match(p, /beginner|everyday|no crypto|plain/i);
+  assert.match(p, /jargon/i);
+});
+
 test('buildPrompt tells the model to state insufficient liquid holdings when the gate found nothing', () => {
   const p = buildPrompt(health({ liquidity: { credibleTokens: 0, totalTokens: 500, insufficient: true } }));
-  assert.match(p, /insufficient liquid holdings/i);
+  assert.match(p, /enough easily-sellable holdings/i); // plain-language phrasing of the insufficient case
 });
 
 test('narrate parses the model JSON into two prose blocks', async () => {

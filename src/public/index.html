@@ -800,7 +800,7 @@ async function analyze(address) {
   stopLoading(); showLoading();
   runBtn.disabled = true; runBtn.textContent = "scanning…";
   try {
-    const res = await fetch(ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ wallet_address: address, chains: [...selected] }) });
+    const res = await fetch(ENDPOINT, { method: "POST", headers: { "content-type": "application/json", "x-scope-demo": "1" }, body: JSON.stringify({ wallet_address: address, chains: [...selected] }) });
     let data = null; try { data = await res.json(); } catch {}
     stopLoading();
     if (!res.ok) { const msg = (data && data.error) || ("the service returned " + res.status + "."); showError(res.status, res.status === 502 ? "couldn't read this wallet upstream — try again in a moment." : msg); }

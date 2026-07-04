@@ -61,7 +61,8 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     }
   }
 
-  const result = await handleAnalyze(req.method, body);
+  const result = await handleAnalyze(req.method, body, req.headers);
+  if (result.headers) for (const [k, v] of Object.entries(result.headers)) res.setHeader(k, v);
   send(res, result.status, result.body);
 }
 

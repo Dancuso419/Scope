@@ -43,9 +43,17 @@ test('malformed JSON body → 400', async () => {
   assert.equal(r.status, 400);
 });
 
-test('missing wallet_address → 400 (validation, before any fetch)', async () => {
-  const r = await fetch(`${base}/api/analyze`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+test('missing wallet_address → 400 (validation, before any fetch; demo path)', async () => {
+  const r = await fetch(`${base}/api/analyze`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-scope-demo': '1' }, body: '{}' });
   assert.equal(r.status, 400);
+});
+
+test('non-demo POST without payment → 402 with x402 challenge over real HTTP', async () => {
+  const r = await fetch(`${base}/api/analyze`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"wallet_address":"0xabc"}' });
+  assert.equal(r.status, 402);
+  assert.ok(r.headers.get('payment-required')); // v2 challenge header
+  const body = await r.json() as { x402Version: number };
+  assert.equal(body.x402Version, 1);
 });
 
 test('oversized body is rejected → 413', async () => {
